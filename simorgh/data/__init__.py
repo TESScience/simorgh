@@ -7,10 +7,13 @@ This module contains:
 __author__ = 'Matthew Wampler-Doty'
 
 import os.path
-import pkg_resources
 import json
-import cherrypy
 import collections
+
+import pkg_resources
+import cherrypy
+import jsonschema
+
 from database import db
 
 
@@ -28,13 +31,20 @@ def dictionary_map(f, dictionary):
 schema_dir = 'schemas'
 
 
-def load_resource_schema(schema):
+def load_resource_schema(*args, **kwargs):
     """
     Load a JSON from a resource in a specified directory relative to this one
     :param schema: str
     :return: dict
     """
-    return json.loads(pkg_resources.resource_string(__name__, os.path.join(schema_dir, schema)))
+    loaded_schema = json.loads(pkg_resources.resource_string(__name__, os.path.join(schema_dir, *args)))
+    if 'check' not in kwargs or kwargs['check']:
+        jsonschema.validate(loaded_schema, schema_schema)
+    return loaded_schema
+
+
+schema_schema = load_resource_schema('meta', 'schema_schema.json', check=False)
+jsonschema.validate(schema_schema, schema_schema)
 
 
 # TODO: this doesn't handle fragment identifiers properly
@@ -55,16 +65,11 @@ schemas = dictionary_map(load_meta_schema, {os.path.splitext(schema)[0]: load_re
                                             for schema in pkg_resources.resource_listdir(__name__, schema_dir)
                                             if ".json" in schema})
 
+
 class SchemaBasedRESTEndpoint(object):
     exposed = True
 
     def __init__(self, schema):
-        # TODO: make a schema for validating schema
-        assert 'id' in schema['properties'], "Schema does not specify an 'id' property:\n\n{}".format(
-            json.dumps(schema, sort_keys=True, indent=4, separators=(',', ': ')))
-        assert len(schema['properties']['type']['enum']) is 1, \
-            "Schema must specify a unique 'type' property:\n\n{}".format(
-                json.dumps(schema, sort_keys=True, indent=4, separators=(',', ': ')))
         self.schema = schema
         self.name = schema['properties']['type']['enum'][0]
 

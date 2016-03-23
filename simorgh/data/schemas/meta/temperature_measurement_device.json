@@ -3,13 +3,14 @@
   "title": "Meta Data Associated With a Temperature Measurement Device",
   "description": "The format for the meta data associated with a device for measuring temperatures",
   "type": "object",
+  "id": "#temperature_measurement_device.json",
   "properties": {
     "type": {
       "enum": [
         "temperature measurement device"
       ]
     },
-        "manufacturer": {
+    "manufacturer": {
       "description": "Manufacturer of the temperature measurement device",
       "type": "string"
     },
@@ -17,15 +18,15 @@
       "description": "Model of the temperature measurement device",
       "type": "string"
     },
-    "serial_number": {
+    "id": {
       "description": "Serial number associated with the temperature measurement device",
       "type": "string"
     }
   },
   "required": [
     "type",
+    "id",
     "manufacturer",
-    "model",
-    "serial_number"
+    "model"
   ]
 }

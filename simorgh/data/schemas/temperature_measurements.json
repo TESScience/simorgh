@@ -3,6 +3,7 @@
   "title": "Temperature Measurement API",
   "description": "The format of a datum taken by a channel on a temperature measurement device at a particular time",
   "type": "object",
+  "id": "file:temperature_measurements.json",
   "properties": {
     "type": {
       "enum": ["temperature measurement"]

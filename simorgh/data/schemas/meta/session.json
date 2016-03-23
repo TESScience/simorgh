@@ -3,6 +3,7 @@
   "title": "Data Collecting Session Meta Data",
   "description": "The format for the meta data associated with a data collecting session",
   "type": "object",
+  "id": "#session.json",
   "properties": {
     "type": {
       "enum": [
@@ -13,20 +14,14 @@
       "description": "A UUID tagging this particular session",
       "$ref": "#/definitions/UUID"
     },
-    "start_time": {
+    "timestamp": {
       "description": "Double precision floating point number representing seconds since UNIX epoch when the session started",
       "type": "number",
       "minimum": 1458008122
     },
-    "PID": {
-      "description": "The process ID that is capturing the temperature data",
-      "type": "integer",
-      "minimum": 0
-    },
-    "UID": {
-      "description": "The user ID that was responsible for capturing the temperature data",
-      "type": "integer",
-      "minimum": 0
+    "hostname": {
+      "description": "The name of the server that is running this session",
+      "type": "string"
     },
     "process_name": {
       "description": "The name of the script or binary that took the data",
@@ -50,11 +45,10 @@
     }
   },
   "required": [
-    "id",
     "type",
-    "start_time",
-    "PID",
-    "UID",
+    "id",
+    "timestamp",
+    "hostname",
     "process_name",
     "commit_id"
   ]

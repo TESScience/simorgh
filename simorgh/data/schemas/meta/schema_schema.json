@@ -1,0 +1,64 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "A Schema for Ensuring Data Schema Are Formatted Correctly",
+  "description": "This schema is used for validating other schema are formatted properly",
+  "type": "object",
+  "id": "file:schema_schema.json",
+  "properties": {
+    "type": {
+      "description": "Every schema must describe an object",
+      "enum": [
+        "object"
+      ]
+    },
+    "id": {
+      "description": "Every schema must have an id",
+      "type": "string"
+    },
+    "properties": {
+      "description": "Every schema must have properties associated with its data",
+      "type": "object",
+      "properties": {
+        "type": {
+          "description": "Every schema must have a type associated with its data",
+          "type": "object",
+          "properties": {
+            "enum": {
+              "type": "array",
+              "items": [
+                {
+                  "type": "string"
+                }
+              ],
+              "additionalItems": false
+            }
+          },
+          "required": [
+            "enum"
+          ]
+        },
+        "id": {
+          "description": "Every schema must specify how its data is to be indexed via an id",
+          "type": "object"
+        }
+      },
+      "required": [
+        "type",
+        "id"
+      ]
+    },
+    "required": {
+      "description": "Every schema must enforce that its data have both types and identifiers associated with them",
+      "type": "array",
+      "items": [{"enum": ["type"]}, {"enum": ["id"]}],
+      "additionalItems": true,
+      "uniqueItems": true
+    }
+  },
+  "required": [
+    "type",
+    "id",
+    "properties",
+    "required"
+  ]
+}

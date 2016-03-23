@@ -6,6 +6,9 @@ set -euo pipefail
 # http://stackoverflow.com/a/246128/586893
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
+# http://stackoverflow.com/a/192337/586893
+SCRIPT_NAME="$(basename "$(test -L "$0" && readlink "$0" || echo "$0")")"
+
 # http://stackoverflow.com/a/2173421/586893
 trap "trap - SIGTERM && kill -- -$$" SIGINT SIGTERM EXIT
 
@@ -69,49 +72,60 @@ make -C ${DIR} reinstall
 
 SIMORGH_DB=":MEMORY:" ${DIR}/venv/bin/python2.7 ${DIR}/venv/bin/simorgh_server --port ${PORT} &
 
-if with_backoff curl http://127.0.0.1:${PORT}/temperature_measurements ; then
+if [[ "$(with_backoff curl -I http://127.0.0.1:${PORT}/temperature_measurements |
+         head -n 1 |
+         cut -d$' ' -f2)" == 200 ]] ; then
 	success "Established connection with simorgh_server on PORT ${PORT}"
 else
 	fail "FAILED to establish connection with simorgh_server on PORT ${PORT}"
+	exit 1
 fi
 
 test ! -f ~/.simorgh_db.json
+
+function random_uuid {
+   uuidgen | tr '[:upper:]' '[:lower:]'
+}
 
 function mock_temperature_data {
     cat <<EOF
 {
   "type": "temperature measurement",
-  "id": "$(uuidgen | tr '[:upper:]' '[:lower:]')",
+  "id": "${1-$(random_uuid)}",
   "session": {
      "type": "session",
-     "id": "$(uuidgen | tr '[:upper:]' '[:lower:]')",
-     "start_time": $(python2.7 -c 'import time; print(time.time())'),
-     "process_name": "temperature_monitor.py",
-     "PID": $$,
-     "UID": ${UID},
-     "commit_id": "$(git rev-parse HEAD)"
+     "id": "$(random_uuid)",
+     "timestamp": $(python2.7 -c 'import time; print(time.time())'),
+     "process_name": "${SCRIPT_NAME}",
+     "hostname": "${HOSTNAME}",
+     "commit_id": "$(cd ${DIR} ; git rev-parse HEAD)"
   },
   "timestamp": $(python2.7 -c 'import time; print(time.time())'),
   "temperature": 21.0123,
   "device": {
      "type": "temperature measurement device",
+     "id": "001A92053B6ABB4131340023",
      "manufacturer": "MCC",
-     "model": "USB-TEMP",
-     "serial_number": "001A92053B6ABB4131340023"
+     "model": "USB-TEMP"
   },
   "channel": 5
 }
 EOF
 }
 
-curl -H "Content-Type: application/json" \
-     -X POST -d "$(mock_temperature_data)" \
-     http://127.0.0.1:${PORT}/temperature_measurements
+UUID1=$(random_uuid)
+[[ "$(curl -i -H "Content-Type: application/json" \
+      -X POST -d "$(mock_temperature_data ${UUID1})" \
+      http://127.0.0.1:${PORT}/temperature_measurements | head -n 1 | cut -d$' ' -f2)" == "200" ]] || exit 1
 
-curl http://127.0.0.1:${PORT}/temperature_measurements | python -m json.tool
+[[ $(curl http://127.0.0.1:${PORT}/temperature_measurements | python -m json.tool) =~ ${UUID1} ]] || exit 1
 
-curl -H "Content-Type: application/json" \
-     -X PUT -d "$(mock_temperature_data)" \
-     http://127.0.0.1:${PORT}/temperature_measurements
+UUID2=$(random_uuid)
+[[ "$(curl -i -H "Content-Type: application/json" \
+      -X PUT -d "$(mock_temperature_data ${UUID2})" \
+      http://127.0.0.1:${PORT}/temperature_measurements | head -n 1 | cut -d$' ' -f2)" == "200" ]] || exit 1
 
-curl http://127.0.0.1:${PORT}/temperature_measurements | python -m json.tool
+[[ $(curl http://127.0.0.1:${PORT}/temperature_measurements | python -m json.tool) =~ ${UUID1} ]] || exit 1
+[[ $(curl http://127.0.0.1:${PORT}/temperature_measurements | python -m json.tool) =~ ${UUID2} ]] || exit 1
+
+echo "--------------------- ☺︎ SUCCESS! ☺︎ ---------------------"
