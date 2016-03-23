@@ -46,10 +46,6 @@
   },
   "required": [
     "type",
-    "id",
-    "timestamp",
-    "hostname",
-    "process_name",
-    "commit_id"
+    "id"
   ]
 }

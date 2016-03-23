@@ -6,14 +6,20 @@
   "id": "file:temperature_measurements.json",
   "properties": {
     "type": {
-      "enum": ["temperature measurement"]
+      "enum": [
+        "temperature measurement"
+      ]
     },
     "id": {
       "description": "A UUID tagging this particular temperature measurement",
       "$ref": "#/definitions/UUID"
     },
-    "session": { "$ref": "meta/session.json" },
-    "device": { "$ref": "meta/temperature_measurement_device.json" },
+    "session": {
+      "$ref": "meta/session.json"
+    },
+    "device": {
+      "$ref": "meta/temperature_measurement_device.json"
+    },
     "timestamp": {
       "description": "Double precision floating point number representing seconds since UNIX epoch",
       "type": "number",
@@ -39,15 +45,14 @@
       "description": "A SHA1 hash",
       "type": "string",
       "pattern": "^[a-f0-9]{40}$"
+    },
+    "rawvalue": {
+      "description": "The unprocessed value (typically resistance) actually measured",
+      "type": "number"
     }
   },
   "required": [
     "type",
-    "id",
-    "session",
-    "device",
-    "timestamp",
-    "temperature",
-    "channel"
+    "id"
   ]
 }
